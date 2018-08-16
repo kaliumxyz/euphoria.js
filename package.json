@@ -1,0 +1,43 @@
+{
+	"name": "euphoria.js",
+	"version": "1.0.0",
+	"description": "",
+	"main": "index.js",
+	"scripts": {
+		"test": "ava",
+		"build": "babel src -d lib"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"dependencies": {
+		"command-line-args": "^5.0.2",
+		"euphoria-connection": "^0.5.2"
+	},
+	"devDependencies": {
+		"ava": "^0.25.0",
+		"babel-cli": "^6.26.0",
+		"babel-preset-env": "^1.7.0"
+	},
+	"ava": {
+		"babel": {
+			"presets": [
+				["env",
+			       {
+				      "targets": {
+					"node": "v8.11.3"
+				      }
+				}
+				]
+			]
+		}
+	},
+	"presets": [
+		"env",
+	       {
+		      "targets": {
+			"node": "v8.11.3"
+		      }
+		}
+	]
+}
