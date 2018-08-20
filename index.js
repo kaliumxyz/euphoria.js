@@ -25,13 +25,15 @@ class Bot extends EventEmitter {
 		this._listing = [];
 		this._log = [];
 
-		this.commands = {
-			kill: '/me is exiting',
-			help: 'I\'m a bot created using https://github.com/kaliumxyz/euphoria.js',
-			long_help: 'I\'m a bot created using https://github.com/kaliumxyz/euphoria.js',
-			ping: 'pong!',
+		this.commands = commands || [];
+		this.commands['!help'] = this._make_reaction('I\'m a bot created using https://github.com/kaliumxyz/euphoria.js');
+		this.commands['!long_help'] = this._make_reaction('I\'m a bot created using https://github.com/kaliumxyz/euphoria.js');
+		this.commands['!ping'] = this._make_reaction('pong!');
+		this.commands[`!kill @${nick}`] = () => {
+			this.reply('/me is exiting');
+			this.connection.close();
 		};
-		this.commands[`ping ${nick}`] = 'pong!';
+		this.commands[`!ping @${nick}`] = this._make_reaction('pong!');
 
 		this.connection.once('open', () => {
 			this.nick = nick;
@@ -40,6 +42,10 @@ class Bot extends EventEmitter {
 
 		this.connection.on('send-event', raw => {
 			this._handle_send_event(raw);
+		});
+
+		this.connection.on('hello-event', raw => {
+			this._handle_hello_event(raw);
 		});
 
 		this.connection.on('join-event', raw => {
@@ -55,10 +61,28 @@ class Bot extends EventEmitter {
 		this.send(content, this.log[ this.log.length - 1 ].id);
 	}
 
+	_make_reaction() {
+		return _ => this.reply(_);
+	}
+
 	_handle_send_event(raw) {
 		const data = raw.data;
+		// check if comement starts with !
+		if(data.content.indexOf('!') === 0) {
+			const reaction = this.commands[data.content];
+			if(reaction)
+				reaction();
+		}
+
+		// TODO limit log max size to prevent process from running out of memory
 		this._log.push(data);
 		this.emit('send-event', raw);
+	}
+
+	_handle_hello_event(raw) {
+		const data = raw.data;
+		this._listing.push(data.session);
+		this.emit('hello-event', raw);
 	}
 
 	_handle_join_event(raw) {
@@ -72,7 +96,7 @@ class Bot extends EventEmitter {
 		this._identity = data.identity;
 		this._session_id = data.session_id;
 		this._version = data.version;
-		this._listing = data.listing;
+		this._listing = this._listing.concat(data.listing);
 		this._log = data.log;
 		this.emit('ready');
 	}
@@ -128,5 +152,7 @@ class Bot extends EventEmitter {
 		return this._identity;
 	}
 }
+
+// TODO include helper classes so the main object is not as bloated
 
 module.exports = {Bot};

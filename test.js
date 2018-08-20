@@ -2,7 +2,7 @@ import test from 'ava';
 // import { setInterval } from 'timers';
 import { Bot } from './';
 
-const time = new Date()
+const time = new Date();
 
 const config = {
 	nick: `${random_nick()} ${time.toUTCString()}`,
@@ -83,25 +83,38 @@ test('can get latest posts', async t => {
 test('can get listing', async t => {
 	const bot = new Bot('lister', config.room);
 	await new Promise(res => {
-		bot.once('join-event', () => {
+		bot.once('ready', () => {
 			setTimeout( () => {
 				res();
-			}, 200);
+			}, 400);
 		});
 	});
-	bot.listing.forEach(x => console.log(x.id, bot.identity));
-	t.true(bot.listing.find(x => x.id === bot.identity));
+	t.truthy(bot.listing.find(x => x.id === bot.identity));
 });
 
-test('follows bot rules', async t => {
+// bot rules
+
+test.todo('can print default help');
+test.todo('can print long format help');
+test.todo('will react to !ping');
+test.todo('will react to !ping @name');
+
+test('can be killed', async t => {
+	const murderer = new Bot('murderer', config.room);
+	await new Promise(res => {
+		murderer.once('open', () => {
+			res();
+		});
+	});
+	const murderee = new Bot('murderee', config.room);
+	await new Promise(res => {
+		murderee.once('open', () => {
+			murderee.connection.once('close', () => {
+				res();
+			});
+			murderer.send('!kill @murderee');			
+		});
+	});
 	t.pass();
-	const bot = new Bot(config.nick, config.room);
-	const nick = await new Promise(res => {
-		bot.once('open', () => {
-			bot.nick = 'nick';
-			res(bot.nick);
-		});
-	});
-	t.is(nick, 'nick');
-
 });
+
