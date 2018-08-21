@@ -24,6 +24,9 @@ class Bot extends EventEmitter {
 		this._nick = nick;
 		this._listing = [];
 		this._log = [];
+		this._config = {
+			regex: false		
+		};
 
 		this.commands = commands || [];
 		this.commands['!help'] = this._make_reaction('I\'m a bot created using https://github.com/kaliumxyz/euphoria.js');
@@ -67,6 +70,9 @@ class Bot extends EventEmitter {
 
 	_handle_send_event(raw) {
 		const data = raw.data;
+		if(this.regex){
+		
+		} else
 		// check if comement starts with !
 		if(data.content.indexOf('!') === 0) {
 			const reaction = this.commands[data.content];
@@ -106,6 +112,7 @@ class Bot extends EventEmitter {
 		this._nick = nick;
 		this.connection.once('nick-reply', () => {
 			this._nick = nick;
+			this.emit('nick-set', nick);
 		});
 	}
 
