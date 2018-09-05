@@ -32,8 +32,8 @@ class Bot extends EventEmitter {
 		this.commands['!help'] = this._make_reaction('I\'m a bot created using https://github.com/kaliumxyz/euphoria.js');
 		this.commands['!long_help'] = this._make_reaction('I\'m a bot created using https://github.com/kaliumxyz/euphoria.js');
 		this.commands['!ping'] = this._make_reaction('pong!');
-		this.commands[`!kill @${nick}`] = () => {
-			this.reply('/me is exiting');
+		this.commands[`!kill @${nick}`] = json => {
+			this.send('/me is exiting', json.data.id);
 			this.connection.close();
 		};
 		this.commands[`!ping @${nick}`] = this._make_reaction('pong!');
@@ -61,23 +61,24 @@ class Bot extends EventEmitter {
 	}
 
 	reply(content){
+		// TODO: guard against race condition
 		this.send(content, this.log[ this.log.length - 1 ].id);
 	}
 
 	_make_reaction() {
-		return _ => this.reply(_);
+		return (_, json) => this.send(_, json.data.id);
 	}
 
 	_handle_send_event(raw) {
 		const data = raw.data;
-		if(this.regex){
+		// if(this.regex){
 		
-		} else
+		// } else
 		// check if comement starts with !
 		if(data.content.indexOf('!') === 0) {
 			const reaction = this.commands[data.content];
 			if(reaction)
-				reaction();
+				reaction(raw);
 		}
 
 		// TODO limit log max size to prevent process from running out of memory
