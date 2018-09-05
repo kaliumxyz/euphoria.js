@@ -14,7 +14,7 @@ class Bot extends EventEmitter {
 		};
 
 		super();
-		this.connection = new Connection(defaults.room, defaults.human, defaults.host, defaults.options, raw => this._handle_snapshot(raw));
+		this.connection = new Connection(defaults.room, defaults.human, defaults.host, defaults.options, json => this._handle_snapshot(json));
 
 		// properties
 		this._room = defaults.room;
@@ -30,7 +30,7 @@ class Bot extends EventEmitter {
 
 		this.commands = commands || [];
 		this.commands['!help'] = this._make_reaction('I\'m a bot created using https://github.com/kaliumxyz/euphoria.js');
-		this.commands['!long_help'] = this._make_reaction('I\'m a bot created using https://github.com/kaliumxyz/euphoria.js');
+		this.commands[`!help @${nick}`] = this._make_reaction('I\'m a bot created using https://github.com/kaliumxyz/euphoria.js');
 		this.commands['!ping'] = this._make_reaction('pong!');
 		this.commands[`!kill @${nick}`] = json => {
 			this.send('/me is exiting', json.data.id);
@@ -43,16 +43,16 @@ class Bot extends EventEmitter {
 			this.emit('open');
 		});
 
-		this.connection.on('send-event', raw => {
-			this._handle_send_event(raw);
+		this.connection.on('send-event', json => {
+			this._handle_send_event(json);
 		});
 
-		this.connection.on('hello-event', raw => {
-			this._handle_hello_event(raw);
+		this.connection.on('hello-event', json => {
+			this._handle_hello_event(json);
 		});
 
-		this.connection.on('join-event', raw => {
-			this._handle_join_event(raw);
+		this.connection.on('join-event', json => {
+			this._handle_join_event(json);
 		});
 	}
 
@@ -65,37 +65,34 @@ class Bot extends EventEmitter {
 		this.send(content, this.log[ this.log.length - 1 ].id);
 	}
 
-	_make_reaction() {
-		return (_, json) => this.send(_, json.data.id);
+	_make_reaction(message) {
+		return id => this.send(message, id);
 	}
 
-	_handle_send_event(raw) {
-		const data = raw.data;
-		// if(this.regex){
-		
-		// } else
-		// check if comement starts with !
-		if(data.content.indexOf('!') === 0) {
+	_handle_send_event(json) {
+		const data = json.data;
+
+		if(data.content.startsWith('!')) {
 			const reaction = this.commands[data.content];
 			if(reaction)
-				reaction(raw);
+				reaction(data.id);
 		}
 
 		// TODO limit log max size to prevent process from running out of memory
 		this._log.push(data);
-		this.emit('send-event', raw);
+		this.emit('send-event', json);
 	}
 
-	_handle_hello_event(raw) {
-		const data = raw.data;
+	_handle_hello_event(json) {
+		const data = json.data;
 		this._listing.push(data.session);
-		this.emit('hello-event', raw);
+		this.emit('hello-event', json);
 	}
 
-	_handle_join_event(raw) {
-		const data = raw.data;
+	_handle_join_event(json) {
+		const data = json.data;
 		this._listing.push(data);
-		this.emit('join-event', raw);
+		this.emit('join-event', json);
 	}
 
 	_handle_snapshot(json) {
