@@ -2,6 +2,7 @@
 'use strict';
 const Connection = require('euphoria-connection');
 const EventEmitter = require('events');
+const uuid = require('uuid/v4');
 
 
 class Bot extends EventEmitter {
@@ -28,16 +29,18 @@ class Bot extends EventEmitter {
 			regex: false		
 		};
 		this._reconnect = true;
+		// TODO: create an immutable way to refer to self and make this clear to any user
+		this._id = uuid();
 
 		this.commands = commands || [];
 		this.commands['!help'] = this._make_reaction('I\'m a bot created using https://github.com/kaliumxyz/euphoria.js');
-		this.commands[`!help @${nick}`] = this._make_reaction('I\'m a bot created using https://github.com/kaliumxyz/euphoria.js');
+		this.commands[`!help ${this._id}`] = this._make_reaction('I\'m a bot created using https://github.com/kaliumxyz/euphoria.js');
 		this.commands['!ping'] = this._make_reaction('pong!');
-		this.commands[`!kill @${nick}`] = id => {
+		this.commands[`!kill ${this._id}`] = id => {
 			this.send('/me is exiting', id);
 			this.connection.close();
 		};
-		this.commands[`!ping @${nick}`] = this._make_reaction('pong!');
+		this.commands[`!ping ${this._id}`] = this._make_reaction('pong!');
 
 		this.connection.once('open', () => {
 			this.nick = nick;
@@ -94,7 +97,8 @@ class Bot extends EventEmitter {
 
 		// any functionality must come AFTER pushing to log, in case the log is needed
 		if(data.content.startsWith('!')) {
-			const reaction = this.commands[data.content];
+			const content = data.content.replace(`@${this._nick}`, this._id);
+			const reaction = this.commands[content];
 			if(reaction)
 				reaction(data.id);
 		}
