@@ -143,6 +143,7 @@ class Bot extends EventEmitter {
 	reconnect() {
 		this.connection = new Connection(this.room, this.human, this.host, this.connection_options);
 		this.connection.once('open', () => {
+			this.nick = this.nick;
 			this.emit('reconnected');
 		});
 
