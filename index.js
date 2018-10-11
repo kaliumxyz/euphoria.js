@@ -76,6 +76,8 @@ class Bot extends EventEmitter {
 
 	post(content, parent) {
 		this.connection.post(content, parent);
+
+		return this;
 	}
 
 	/* reply to the last post
@@ -83,6 +85,8 @@ class Bot extends EventEmitter {
 	 */
 	reply(content){
 		this.post(content, this.log[ this.log.length - 1 ].id);
+
+		return this;
 	}
 
 	_make_reaction(message) {
@@ -140,6 +144,8 @@ class Bot extends EventEmitter {
 		this.connection.once('open', () => {
 			this.emit('reconnected');
 		});
+
+		return this;
 	}
 
 	set nick(nick) {
@@ -149,6 +155,8 @@ class Bot extends EventEmitter {
 			this._nick = nick;
 			this.emit('nick-set', nick);
 		});
+
+		return this;
 	}
 
 	get nick() {
@@ -166,6 +174,8 @@ class Bot extends EventEmitter {
 			this._room = room;
 			this.emit('reconnected');
 		});
+
+		return this;
 	}
 
 	get room() {
