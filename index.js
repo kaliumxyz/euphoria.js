@@ -155,8 +155,6 @@ class Bot extends EventEmitter {
 			this._nick = nick;
 			this.emit('nick-set', nick);
 		});
-
-		return this;
 	}
 
 	get nick() {
@@ -174,8 +172,6 @@ class Bot extends EventEmitter {
 			this._room = room;
 			this.emit('reconnected');
 		});
-
-		return this;
 	}
 
 	get room() {
