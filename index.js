@@ -27,6 +27,7 @@ class Bot extends EventEmitter {
 		this._config = {
 			regex: false		
 		};
+		this._reconnect = true;
 
 		this.commands = commands || [];
 		this.commands['!help'] = this._make_reaction('I\'m a bot created using https://github.com/kaliumxyz/euphoria.js');
@@ -43,6 +44,11 @@ class Bot extends EventEmitter {
 			this.emit('open');
 		});
 
+		this.connection.on('close', () => {
+			if(this._reconnect)
+				this.reconnect();
+		});
+
 		this.connection.on('send-event', json => {
 			this._handle_send_event(json);
 		});
@@ -54,33 +60,47 @@ class Bot extends EventEmitter {
 		this.connection.on('join-event', json => {
 			this._handle_join_event(json);
 		});
+
+		this.connection.on('part-event', json => {
+			this._handle_part_event(json);
+		});
+
+		process.on('beforeExit', () => {
+			this._reconnect = false;
+			this.connection.close();
+		});
 	}
 
-	send(content, parent) {
+	post(content, parent) {
 		this.connection.post(content, parent);
 	}
 
+	/* reply to the last post
+	 *
+	 */
 	reply(content){
-		// TODO: guard against race condition
-		this.send(content, this.log[ this.log.length - 1 ].id);
+		this.post(content, this.log[ this.log.length - 1 ].id);
 	}
 
 	_make_reaction(message) {
-		return id => this.send(message, id);
+		return id => this.post(message, id);
 	}
 
 	_handle_send_event(json) {
 		const data = json.data;
 
+		// TODO limit log max size to prevent process from running out of memory
+		this._log.push(data);
+
+		// any functionality must come AFTER pushing to log, in case the log is needed
 		if(data.content.startsWith('!')) {
 			const reaction = this.commands[data.content];
 			if(reaction)
 				reaction(data.id);
 		}
 
-		// TODO limit log max size to prevent process from running out of memory
-		this._log.push(data);
 		this.emit('send-event', json);
+		this.emit('post', data);
 	}
 
 	_handle_hello_event(json) {
@@ -95,6 +115,12 @@ class Bot extends EventEmitter {
 		this.emit('join-event', json);
 	}
 
+	_handle_part_event(json) {
+		const data = json.data;
+		this._listing.splice(this._listing.findIndex(item => item.id === data.id), 1);
+		this.emit('part-event', json);
+	}
+
 	_handle_snapshot(json) {
 		const data = json.data;
 		this._identity = data.identity;
@@ -103,6 +129,13 @@ class Bot extends EventEmitter {
 		this._listing = this._listing.concat(data.listing);
 		this._log = data.log;
 		this.emit('ready');
+	}
+
+	reconnect() {
+		this.connection = new Connection(this.room, this.human, this.host, this.options);
+		this.connection.once('open', () => {
+			this.emit('reconnected');
+		});
 	}
 
 	set nick(nick) {
@@ -127,6 +160,7 @@ class Bot extends EventEmitter {
 		this._room = room;
 		this.connection.once('open', () => {
 			this._room = room;
+			this.emit('reconnected');
 		});
 	}
 
@@ -143,6 +177,7 @@ class Bot extends EventEmitter {
 	}
 	
 	get log() {
+		// slice creates a copy.
 		return this._log.slice(0);
 	}
 
@@ -151,6 +186,7 @@ class Bot extends EventEmitter {
 	}
 
 	get listing() {
+		// slice creates a copy.
 		return this._listing.slice(0);
 	}
 	get identity() {
