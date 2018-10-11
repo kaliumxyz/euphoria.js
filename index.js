@@ -6,7 +6,7 @@ const uuid = require('uuid/v4');
 
 
 class Bot extends EventEmitter {
-	constructor(nick = '><>', room = 'test', commands, defaults) {
+	constructor(nick = '><>', room = 'test', commands, options = {}, defaults) {
 		defaults = {
 			room: room,
 			human: 0,
@@ -21,14 +21,15 @@ class Bot extends EventEmitter {
 		this._room = defaults.room;
 		this._human = defaults.human;
 		this._host = defaults.host;
-		this._options = defaults.options;
+		this._connection_options = defaults.options;
+		this._options = options;
 		this._nick = nick;
 		this._listing = [];
 		this._log = [];
 		this._config = {
 			regex: false		
 		};
-		this._reconnect = true;
+		this._reconnect = options.reconnect || false;
 		// TODO: create an immutable way to refer to self and make this clear to any user
 		this._id = uuid();
 
@@ -140,7 +141,7 @@ class Bot extends EventEmitter {
 	}
 
 	reconnect() {
-		this.connection = new Connection(this.room, this.human, this.host, this.options);
+		this.connection = new Connection(this.room, this.human, this.host, this.connection_options);
 		this.connection.once('open', () => {
 			this.emit('reconnected');
 		});
@@ -166,7 +167,7 @@ class Bot extends EventEmitter {
 	}
 
 	set room(room) {
-		this.connection = new Connection(room, this.human, this.host, this.options);
+		this.connection = new Connection(room, this.human, this.host, this.connection_options);
 		this._room = room;
 		this.connection.once('open', () => {
 			this._room = room;
@@ -181,6 +182,11 @@ class Bot extends EventEmitter {
 	get human() {
 		return this._human;
 	}
+
+	get connection_options() {
+		return this._connection_options;
+	}
+	
 
 	get host() {
 		return this._host;
