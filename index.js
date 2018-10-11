@@ -32,8 +32,8 @@ class Bot extends EventEmitter {
 		this.commands['!help'] = this._make_reaction('I\'m a bot created using https://github.com/kaliumxyz/euphoria.js');
 		this.commands[`!help @${nick}`] = this._make_reaction('I\'m a bot created using https://github.com/kaliumxyz/euphoria.js');
 		this.commands['!ping'] = this._make_reaction('pong!');
-		this.commands[`!kill @${nick}`] = json => {
-			this.send('/me is exiting', json.data.id);
+		this.commands[`!kill @${nick}`] = id => {
+			this.send('/me is exiting', id);
 			this.connection.close();
 		};
 		this.commands[`!ping @${nick}`] = this._make_reaction('pong!');
