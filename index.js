@@ -38,7 +38,7 @@ class Bot extends EventEmitter {
 		this.commands['!ping'] = this._make_reaction('pong!');
 		this.commands[`!kill ${this._id}`] = id => {
 			this.post('/me is exiting', id);
-			this.connection.close();
+			process.exit(0);
 		};
 		this.commands[`!ping ${this._id}`] = this._make_reaction('pong!');
 
