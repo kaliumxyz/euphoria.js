@@ -4,15 +4,22 @@ const Connection = require('euphoria-connection');
 const EventEmitter = require('events');
 const uuid = require('uuid/v4');
 
+// TODO: filters for commands.
 
 class Bot extends EventEmitter {
-	constructor(nick = '><>', room = 'test', commands, options = {}, defaults) {
+	constructor(
+		nick = '><>',
+		room = 'test',
+		commands,
+		options = {
+			disconnect_on_kill: false, reconnect: true
+		},
 		defaults = {
 			room: room,
 			human: 0,
 			host: 'wss://euphoria.io',
 			options: { origin: 'https://euphoria.io' },
-		};
+		}) {
 
 		super();
 		this.connection = new Connection(defaults.room, defaults.human, defaults.host, defaults.options, json => this._handle_snapshot(json));
@@ -27,7 +34,8 @@ class Bot extends EventEmitter {
 		this._listing = [];
 		this._log = [];
 		this._config = {
-			regex: false		
+			regex: false,
+			disconnect_on_kill: options.disconnect_on_kill || false
 		};
 		this._reconnect = options.reconnect || false;
 		// TODO: create an immutable way to refer to self and make this clear to any user
@@ -39,7 +47,10 @@ class Bot extends EventEmitter {
 		this.commands['!ping'] = this._make_reaction('pong!');
 		this.commands[`!kill ${this._id}`] = id => {
 			this.post('/me is exiting', id);
-			process.exit(0);
+			if (!this._config.soft_kill)
+				process.exit(0);
+			else
+				this.connection.close();
 		};
 		this.commands[`!ping ${this._id}`] = this._make_reaction('pong!');
 
