@@ -10,7 +10,7 @@ const config = {
 };
 
 function random_nick() {
-	return ['agent smit', 'neo', '<><', '><>'][Math.floor(Math.random() * 4)] ; 
+	return ['agent Smith', 'Simon', 'Richard Man', 'Lucky', 'Neo', '<><', '><>'][Math.floor(Math.random() * 7)] ; 
 }
 
 test('can create bot', t => {
