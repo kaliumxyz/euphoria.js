@@ -11,7 +11,7 @@ class Bot extends EventEmitter {
 		nick = '><>',
 		room = 'test',
 		commands,
-		options = {
+		settings = {
 			disconnect_on_kill: false, reconnect: true
 		},
 		defaults = {
@@ -29,7 +29,7 @@ class Bot extends EventEmitter {
 		this._human = defaults.human;
 		this._host = defaults.host;
 		this._connection_options = defaults.options;
-		this._options = options;
+		this._settings = settings;
 		this._nick = nick;
 		this._listing = [];
 		this._log = [];
