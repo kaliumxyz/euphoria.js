@@ -105,6 +105,28 @@ class Bot extends EventEmitter {
 		return id => this.post(message, id);
 	}
 
+	add_command(command, reaction) {
+		// check if command is a string or regular expression.
+		if (reaction === void(0))
+			throw new Error('reaction is Undefined');
+		if (typeof command === 'string' || command.test) {
+			const command_index = uuid();
+			switch(typeof reaction) {
+			case 'string':
+				this.commands[command_index] = this._make_reaction(reaction);
+				break;
+			case 'function':
+				this.commands[command_index] = reaction;
+				break;
+			default:
+				this.commands[command_index] = this._make_reaction(reaction.toString());
+				break;
+			}
+			return command_index;
+		}
+		throw new Error('Command is not of type String or has property .test');
+	}
+
 	_handle_send_event(json) {
 		const data = json.data;
 
