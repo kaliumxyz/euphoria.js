@@ -87,6 +87,7 @@ class Bot extends EventEmitter {
 	}
 
 	post(content, parent) {
+		this.emit('posting', {content: content, parent: parent});
 		this.connection.post(content, parent);
 
 		return this;
