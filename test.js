@@ -45,7 +45,7 @@ test('can send', async t => {
 	const bot = new Bot(config.nick, config.room);
 	await new Promise(res => {
 		bot.once('open', () => {
-			bot.send('post');
+			bot.post('post');
 			bot.connection.once('send-reply', () => res());
 		});
 	});
@@ -56,7 +56,7 @@ test('can reply', async t => {
 	const bot = new Bot(config.nick, config.room);
 	await new Promise(res => {
 		bot.once('open', () => {
-			bot.send('post');
+			bot.post('post');
 			bot.connection.once('send-event', () => {
 				bot.reply('reply');
 				res();
@@ -71,7 +71,7 @@ test('can get latest posts', async t => {
 	const bot = new Bot(config.nick, config.room);
 	const log = await new Promise(res => {
 		bot.once('ready', () => {
-			bot.send('post');
+			bot.post('post');
 			bot.once('send-event', () => {
 				res(bot.log);
 			});
@@ -112,7 +112,7 @@ test('can be killed', async t => {
 			murderee.connection.once('close', () => {
 				res();
 			});
-			murderer.send('!kill @murderee');			
+			murderer.post('!kill @murderee');			
 		});
 	});
 	t.pass();
