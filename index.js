@@ -10,9 +10,10 @@ class Bot extends EventEmitter {
 	constructor(
 		nick = '><>',
 		room = 'test',
-		commands,
 		settings = {
-			disconnect_on_kill: false, reconnect: true
+			commands: [],
+			disconnect_on_kill: false,
+			reconnect: true
 		},
 		defaults = {
 			room: room,
@@ -35,13 +36,13 @@ class Bot extends EventEmitter {
 		this._log = [];
 		this._config = {
 			regex: false,
-			disconnect_on_kill: options.disconnect_on_kill || false
+			disconnect_on_kill: settings.disconnect_on_kill || false
 		};
-		this._reconnect = options.reconnect || false;
+		this._reconnect = settings.reconnect || false;
 		// TODO: create an immutable way to refer to self and make this clear to any user
 		this._id = uuid();
 
-		this.commands = commands || [];
+		this.commands = settings.commands || [];
 		this.commands['!help'] = this._make_reaction('I\'m a bot created using https://github.com/kaliumxyz/euphoria.js');
 		this.commands[`!help ${this._id}`] = this._make_reaction('I\'m a bot created using https://github.com/kaliumxyz/euphoria.js');
 		this.commands['!ping'] = this._make_reaction('pong!');
@@ -221,12 +222,11 @@ class Bot extends EventEmitter {
 	get connection_options() {
 		return this._connection_options;
 	}
-	
 
 	get host() {
 		return this._host;
 	}
-	
+
 	get log() {
 		// slice creates a copy.
 		return this._log.slice(0);
@@ -240,11 +240,10 @@ class Bot extends EventEmitter {
 		// slice creates a copy.
 		return this._listing.slice(0);
 	}
+
 	get identity() {
 		return this._identity;
 	}
 }
-
-// TODO include helper classes so the main object is not as bloated
 
 module.exports = {Bot};
