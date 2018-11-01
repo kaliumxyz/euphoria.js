@@ -93,11 +93,28 @@ test('can get listing', async t => {
 });
 
 // bot rules
-
-test.todo('can print default help');
 test.todo('can print long format help');
 test.todo('will react to !ping');
 test.todo('will react to !ping @name');
+
+test('can print default help', async t => {
+	const help = new Bot('short help', config.room);
+	await new Promise(res => {
+		help.once('open', () => {
+			res();
+		});
+	});
+	const helper = new Bot('short help poster', config.room);
+	await new Promise(res => {
+		helper.once('open', () => {
+			helper.connection.once('send-event', () => {
+				res();
+			});
+			help.post('!help');			
+		});
+	});
+	t.pass();
+});
 
 test('can be killed', async t => {
 	const murderer = new Bot('murderer', config.room);
