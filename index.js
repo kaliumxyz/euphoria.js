@@ -41,6 +41,7 @@ class Bot extends EventEmitter {
 		this._reconnect = settings.reconnect || false;
 		// TODO: create an immutable way to refer to self and make this clear to any user
 		this._id = uuid();
+		this.self = this._id;
 
 		this.commands = settings.commands || [];
 		this.commands['!help'] = this._make_reaction('I\'m a bot created using https://github.com/kaliumxyz/euphoria.js');
