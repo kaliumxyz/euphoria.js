@@ -10,7 +10,7 @@ const config = {
 };
 
 function random_nick() {
-	return ['agent Smith', 'Simon', 'Richard Man', 'Lucky', 'Neo', '<><', '><>'][Math.floor(Math.random() * 7)] ; 
+	return ['agent Smith', 'Simon', 'Rich Man', 'Lucky', 'Neo', '<><', '><>'][Math.floor(Math.random() * 7)] ; 
 }
 
 test('can create bot', t => {
@@ -66,15 +66,17 @@ test('can reply', async t => {
 	t.pass();
 });
 
-
 test('can get latest posts', async t => {
 	const bot = new Bot(config.nick, config.room);
 	const log = await new Promise(res => {
 		bot.once('ready', () => {
-			bot.post('post');
-			bot.once('send-event', () => {
-				res(bot.log);
-			});
+			bot
+        .on('posting', () => {
+          if (bot.log.pop() === 'post') {
+            res(bot.log);
+          }
+        })
+        .post('post');
 		});
 	});
 	t.is(log.pop().content, 'post');
@@ -135,3 +137,4 @@ test('can be killed', async t => {
 	t.pass();
 });
 
+test.todo('can reply to multiple posts');
