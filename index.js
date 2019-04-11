@@ -66,6 +66,10 @@ class Bot extends EventEmitter {
 				this.reconnect();
 		});
 
+		this.connection.on('send-reply', json => {
+			this.emit('send-reply', json);
+		});
+
 		this.connection.on('send-event', json => {
 			this._handle_send_event(json);
 		});
@@ -88,9 +92,25 @@ class Bot extends EventEmitter {
 		});
 	}
 
+	/**
+	 * 
+	 * TODO: add flags to disable disable nick substitution
+	 * TODO: add posting to multiple parent ids
+	 * @param {*} content 
+	 * @param {*} parent 
+	 */
 	post(content, parent) {
-		this.emit('posting', {content: content, parent: parent});
-		this.connection.post(content, parent);
+
+		const parsed = content.replace(this.self, `@${this._nick}`);
+		if (Array.isArray(parent)) {
+			parent.forEach(parent => {
+				this.emit('posting', {content: parsed,bot: {unparsed: content}, parent: parent});
+				this.connection.post(parsed, parent);
+			});
+		} else {
+			this.emit('posting', {content: parsed,bot: {unparsed: content}, parent: parent});
+			this.connection.post(parsed, parent);
+		}
 
 		return this;
 	}
@@ -108,6 +128,12 @@ class Bot extends EventEmitter {
 		return id => this.post(message, id);
 	}
 
+	/**
+	 * add a comand, returns the index of the command
+	 * TODO: add real command object that is returned, which has features to allow for mutating the command.
+	 * @param {*} command 
+	 * @param {*} reaction 
+	 */
 	add_command(command, reaction) {
 		// check if command is a string or regular expression.
 		if (reaction === void(0))
@@ -133,16 +159,26 @@ class Bot extends EventEmitter {
 	_handle_send_event(json) {
 		const data = json.data;
 
-		// TODO limit log max size to prevent process from running out of memory
-		this._log.push(data);
+		/* TODO: limit log max size to prevent process from running out of memory
 
+		*/
+		this._log.push(data);
 		// any functionality must come AFTER pushing to log, in case the log is needed
-		if(data.content.startsWith('!')) {
-			const content = data.content.replace(`@${this._nick}`, this._id);
-			const reaction = this.commands[content];
-			if(reaction)
-				reaction(data.id);
-		}
+
+		// replace the nick with its ID in the context of the commands.
+		const content = data.content.replace(`@${this._nick}`, this._id);
+		const reaction = this.commands[content];
+		if(reaction)
+			reaction(data.id);
+
+		// we want to allow things further up the chain to know if there already has been a reaction, and access the modified content
+		const bot = {
+			reaction: reaction,
+			parsed: content
+		};
+
+		json.bot = bot;
+		data.bot = bot;
 
 		this.emit('send-event', json);
 		this.emit('post', data);
@@ -177,6 +213,7 @@ class Bot extends EventEmitter {
 	}
 
 	reconnect() {
+		this.emit('reconnecting');
 		this.connection = new Connection(this.room, this.human, this.host, this.connection_options);
 		this.connection.once('open', () => {
 			this.nick = this.nick;
@@ -228,6 +265,24 @@ class Bot extends EventEmitter {
 		return this._host;
 	}
 
+	/**
+	 * return the first n from the log
+	 * @param {Number} n 
+	 */
+	head(n) {
+		// slice creates a copy.
+		return this._log.slice(0, n);
+	}
+
+	/**
+	 * return the last n from the log
+	 * @param {Number} n 
+	 */
+	tail(n) {
+		// slice creates a copy.
+		return this._log.slice(this._log.length - n);
+	}
+
 	get log() {
 		// slice creates a copy.
 		return this._log.slice(0);
@@ -246,5 +301,9 @@ class Bot extends EventEmitter {
 		return this._identity;
 	}
 }
+
+/* TODO: create factories for replies (e.g., make_reply, make_reply_html_get).
+ * remove the current outside of the Bot constructor to prevent it from getting too bloated.
+ */
 
 module.exports = {Bot};
