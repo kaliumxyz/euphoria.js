@@ -23,7 +23,18 @@ class Bot extends EventEmitter {
 		}) {
 
 		super();
+    this.setMaxListeners(100); // solve all problems in life by sweeping them under the curtain.
 		this.connection = new Connection(defaults.room, defaults.human, defaults.host, defaults.options, json => this._handle_snapshot(json));
+    this.connection.setMaxListeners(100);
+
+    // TODO: move this to euphoria-connection
+    this.connection.once('upgrade', ws => {
+      // console.log("upgrade");
+    });
+
+    this.connection.once('open', ws => {
+      // console.log(ws);
+    });
 
 		// properties
 		this._room = defaults.room;
@@ -55,41 +66,72 @@ class Bot extends EventEmitter {
 				this.connection.close();
 		};
 		this.commands[`!ping ${this._id}`] = this._make_reaction('pong!');
-
+    this._add_listeners(this);
 		this.connection.once('open', () => {
 			this.nick = nick;
 			this.emit('open');
 		});
 
-		this.connection.on('close', () => {
-			if(this._reconnect)
-				this.reconnect();
+
+
+	}
+
+  _add_listeners(that) {
+		that.connection.on('close', () => {
+			if(that._reconnect)
+				that.reconnect();
 		});
 
-		this.connection.on('send-reply', json => {
-			this.emit('send-reply', json);
+		that.connection.on('send-reply', json => {
+			that.emit('send-reply', json);
 		});
 
-		this.connection.on('send-event', json => {
-			this._handle_send_event(json);
+		that.connection.on('send-event', json => {
+			that._handle_send_event(json);
 		});
 
-		this.connection.on('hello-event', json => {
-			this._handle_hello_event(json);
+		that.connection.on('hello-event', json => {
+			that._handle_hello_event(json);
 		});
 
-		this.connection.on('join-event', json => {
-			this._handle_join_event(json);
+		that.connection.on('join-event', json => {
+			that._handle_join_event(json);
 		});
 
-		this.connection.on('part-event', json => {
-			this._handle_part_event(json);
+		that.connection.on('part-event', json => {
+			that._handle_part_event(json);
 		});
 
 		process.on('beforeExit', () => {
-			this._reconnect = false;
-			this.connection.close();
+			that._reconnect = false;
+			that.connection.close();
 		});
+
+  }
+
+	/**
+	 * 
+	 * TODO: add flags to disable disable nick substitution
+	 * TODO: add posting to multiple parent ids
+	 * @param {*} content 
+	 * @param {*} parent 
+	 */
+	post_async(content, parent) {
+
+    return new Promise((resolve, reject) => {
+      const parsed = content.replace(this.self, `@${this._nick}`);
+      if (Array.isArray(parent)) {
+        parent.forEach(parent => {
+          this.emit('posting', {content: parsed,bot: {unparsed: content}, parent: parent});
+          this.connection.post(parsed, parent);
+        });
+      } else {
+        this.emit('posting', {content: parsed,bot: {unparsed: content}, parent: parent});
+        this.connection.post(parsed, parent);
+      }
+
+      this.once('send-reply', json => resolve(json.data));
+    });
 	}
 
 	/**
@@ -215,6 +257,8 @@ class Bot extends EventEmitter {
 	reconnect() {
 		this.emit('reconnecting');
 		this.connection = new Connection(this.room, this.human, this.host, this.connection_options);
+    this._add_listeners(this);
+    
 		this.connection.once('open', () => {
 			this.nick = this.nick;
 			this.emit('reconnected');

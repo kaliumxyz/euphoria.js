@@ -5,6 +5,7 @@
 	"main": "index.js",
 	"scripts": {
 		"test": "ava",
+		"test-v": "ava --verbose",
 		"build": "babel src -d lib"
 	},
 	"keywords": [],

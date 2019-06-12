@@ -14,19 +14,34 @@ function random_nick() {
 }
 
 test('can create bot', t => {
-	t.true(new Bot(config.nick, config.room) instanceof Bot);
+  const test = {};
+  test.bot = new Bot(config.nick, config.room);
+	t.true(test.bot instanceof Bot);
+  delete test.bot;
+});
+
+test.only('can create over 11 connections without memory leak error', t => {
+  const test = [];
+  for(let i = 0; i < 12; i++){
+    test[i] = new Bot(config.nick, config.room);
+  }
+  const last = test.pop();
+		last.once('open', () => {
+      t.true(last instanceof Bot);
+    });
 });
 
 test('can change nick', async t => {
-	const bot = new Bot(config.nick, config.room);
+  const test = {};
+  test.bot = new Bot(config.nick, config.room);
 	const nick = await new Promise(res => {
-		bot.once('open', () => {
-			bot.nick = 'nick';
-			res(bot.nick);
+		test.bot.once('open', () => {
+			test.bot.nick = 'nick';
+			res(test.bot.nick);
 		});
 	});
 	t.is(nick, 'nick');
-
+  delete test.bot;
 });
 
 test('can change room', async t => {
