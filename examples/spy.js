@@ -6,30 +6,36 @@ const {Bot} = require('..');
 const bot = new Bot('', process.argv[2]);
 
 // log any posts
-// bot.on('post', form_tree);
 
-bot.on('ready', () => print(map_comments(bot.log)));
+bot.on('ready', () => {
+  print(map_comments(bot.log));
+});
+
+bot.on('post', () => {
+  console.log("...");
+  print(map_comments(bot.log));
+  // process.exit(0);
+});
 // bot.on('ready', () => map_comments(bot.log));
-
-bot.tree = [];
 
 function map_comments(list) {
   const map = [];
   const tree = [];
-  list.forEach(x => map[x.id] = x);
 
   function resolve(node){
-    if(node.parent) {
-      if (map[node.parent]) {
-        if (map[node.parent].children) {
-          if (!map[node.parent].children.find(x => x.id === node.id))
-            map[node.parent].children.push(node);
+    map[node.id] = node
+    let parent = node.parent;
+    if(parent) {
+      if (map[parent]) {
+        if (map[parent].children) {
+           if (!map[node.parent].children.find(x => x.id === node.id))
+              map[parent].children.push(node);
         } else {
-          map[node.parent].children = [];
-          map[node.parent].children.push(node);
+          map[parent].children = [];
+          map[parent].children.push(node);
         }
       } else { // node does not exist
-        map[node.parent] = {
+        map[parent] = {
           children: [node]
         }
       }
@@ -47,18 +53,20 @@ function map_comments(list) {
 }
 
 
-function print(tree, depth = 0) {
+function print(tree, depth = 0, is_last_child_of_root = false) {
   tree.forEach((x, i) => {
+    if (depth === 1)
+        is_last_child_of_root = i == tree.length-1;
     let padding = "";
     for (let i=0; i < depth; i++) {
       padding += "─";
     }
     if (x.children) {
       console.log(`${depth>0?"├":"┌"}${padding}${x.sender.name} ${x.content}`);
-      print(x.children, depth + 1);
+      print(x.children, depth + 1, is_last_child_of_root);
     } else {
       let last = i == tree.length-1;
-      console.log(`${depth>0?last?"└":"├":"╶"}${padding}${x.sender.name} ${x.content}`);
+      console.log(`${depth>0?last?is_last_child_of_root?"└":"├":"├":"╶"}${padding}${x.sender.name} ${x.content}`);
     }
   });
 }
