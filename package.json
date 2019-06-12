@@ -12,13 +12,11 @@
 	"author": "",
 	"license": "ISC",
 	"dependencies": {
-		"euphoria-connection": "^0.5.2",
+		"euphoria-connection": "^0.6.0",
 		"uuid": "^3.3.2"
 	},
 	"devDependencies": {
-		"ava": "^0.25.0",
-		"babel-cli": "^6.26.0",
-		"babel-preset-env": "^1.7.0"
+		"ava": "^2.1.0"
 	},
 	"ava": {
 		"babel": {
