@@ -16,21 +16,7 @@
 		"uuid": "^3.3.2"
 	},
 	"devDependencies": {
-		"ava": "^2.1.0"
-	},
-	"ava": {
-		"babel": {
-			"presets": [
-				[
-					"env",
-					{
-						"targets": {
-							"node": "v8.11.3"
-						}
-					}
-				]
-			]
-		}
+		"ava": "^2.3.0"
 	},
 	"presets": [
 		"env",

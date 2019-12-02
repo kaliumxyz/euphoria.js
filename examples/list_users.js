@@ -14,7 +14,7 @@ bot.on('ready', () => {
 bot.on('post', () => {
   console.log("...");
   print(map_comments(bot.log));
-  // process.exit(0);
+  process.exit(0);
 });
 // bot.on('ready', () => map_comments(bot.log));
 
