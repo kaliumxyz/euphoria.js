@@ -71,6 +71,11 @@ class Bot extends EventEmitter {
 			this.nick = nick;
 			this.emit('open');
 		});
+
+		process.on('beforeExit', () => {
+			this._reconnect = false;
+			this.connection.close();
+		});
 	}
 
   _add_listeners(that) {
@@ -101,11 +106,6 @@ class Bot extends EventEmitter {
 
 		that.connection.on('part-event', json => {
 			that._handle_part_event(json);
-		});
-
-		process.on('beforeExit', () => {
-			that._reconnect = false;
-			that.connection.close();
 		});
 
   }
