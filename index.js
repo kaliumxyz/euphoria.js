@@ -23,18 +23,18 @@ class Bot extends EventEmitter {
 		}) {
 
 		super();
-    this.setMaxListeners(100);
+		this.setMaxListeners(100);
 		this.connection = new Connection(defaults.room, defaults.human, defaults.host, defaults.options, json => this._handle_snapshot(json));
-    this.connection.setMaxListeners(100);
+		this.connection.setMaxListeners(100);
 
-    // TODO: move this to euphoria-connection
-    this.connection.once('upgrade', ws => {
-      // console.log("upgrade");
-    });
+		// TODO: move this to euphoria-connection
+		this.connection.once('upgrade', ws => {
+			// console.log("upgrade");
+		});
 
-    this.connection.once('open', ws => {
-      // console.log(ws);
-    });
+		this.connection.once('open', ws => {
+			// console.log(ws);
+		});
 
 		// properties
 		this._room = defaults.room;
@@ -43,6 +43,7 @@ class Bot extends EventEmitter {
 		this._connection_options = defaults.options;
 		this._settings = settings;
 		this._nick = nick;
+		this._reconnect_delay = 5000;
 		this._listing = [];
 		this._log = [];
 		this._config = {
@@ -66,7 +67,7 @@ class Bot extends EventEmitter {
 				this.connection.close();
 		};
 		this.commands[`!ping ${this._id}`] = this._make_reaction('pong!');
-    this._add_listeners(this);
+		this._add_listeners(this);
 		this.connection.once('open', () => {
 			this.nick = nick;
 			this.emit('open');
@@ -78,10 +79,14 @@ class Bot extends EventEmitter {
 		});
 	}
 
-  _add_listeners(that) {
+	_add_listeners(that) {
 		that.connection.on('close', () => {
 			if(that._reconnect)
-				that.reconnect();
+				setTimeout(() => {that.reconnect()}, that._reconnect_delay)
+		});
+
+		that.connection.on('error', err => {
+			process.exit(1);
 		});
 
 		that.connection.on('send-reply', json => {
@@ -93,7 +98,7 @@ class Bot extends EventEmitter {
 		});
 
 		that.connection.on('nick-event', json => {
-      that._handle_nick_event(json);
+			that._handle_nick_event(json);
 		});
 
 		that.connection.on('hello-event', json => {
@@ -108,7 +113,7 @@ class Bot extends EventEmitter {
 			that._handle_part_event(json);
 		});
 
-  }
+	}
 
 	/**
 	 *
@@ -118,20 +123,20 @@ class Bot extends EventEmitter {
 	 */
 	post_async(content, parent) {
 
-    return new Promise((resolve, reject) => {
-      const parsed = content.replace(this.self, `@${this._nick}`);
-      if (Array.isArray(parent)) {
-        parent.forEach(parent => {
-          this.emit('posting', {content: parsed,bot: {unparsed: content}, parent: parent});
-          this.connection.post(parsed, parent);
-        });
-      } else {
-        this.emit('posting', {content: parsed,bot: {unparsed: content}, parent: parent});
-        this.connection.post(parsed, parent);
-      }
+		return new Promise((resolve, reject) => {
+			const parsed = content.replace(this.self, `@${this._nick}`);
+			if (Array.isArray(parent)) {
+				parent.forEach(parent => {
+					this.emit('posting', {content: parsed,bot: {unparsed: content}, parent: parent});
+					this.connection.post(parsed, parent);
+				});
+			} else {
+				this.emit('posting', {content: parsed,bot: {unparsed: content}, parent: parent});
+				this.connection.post(parsed, parent);
+			}
 
-      this.once('send-reply', json => resolve(json.data));
-    });
+			this.once('send-reply', json => resolve(json.data));
+		});
 	}
 
 	/**
@@ -201,7 +206,7 @@ class Bot extends EventEmitter {
 
 		/* TODO: limit log max size to prevent process from running out of memory
 
-		*/
+		 */
 		this._log.push(data);
 		// any functionality must come AFTER pushing to log, in case the log is needed
 
@@ -246,7 +251,7 @@ class Bot extends EventEmitter {
 		const data = json.data;
 		this._listing[this._listing.findIndex(item => item.session_id === data.session_id)].name = data.to;
 		this.emit('nick-event', json);
-  }
+	}
 
 	_handle_snapshot(json) {
 		const data = json.data;
@@ -261,7 +266,7 @@ class Bot extends EventEmitter {
 	reconnect() {
 		this.emit('reconnecting');
 		this.connection = new Connection(this.room, this.human, this.host, this.connection_options);
-    this._add_listeners(this);
+		this._add_listeners(this);
 		this.connection.once('open', () => {
 			this.nick = this.nick;
 			this.emit('reconnected');
@@ -271,18 +276,21 @@ class Bot extends EventEmitter {
 	}
 
 	set nick(nick) {
+		if (!nick) {
+			nick = undefined
+		}
 		this.connection.nick(nick);
 		this._nick = nick;
 		this.connection.once('nick-reply', json => {
-      const data = json.data;
+			const data = json.data;
 			this._nick = data.to;
-		  this._listing[this._listing.findIndex(item => item.session_id === data.session_id)].name = data.to;
+			this._listing[this._listing.findIndex(item => item.session_id === data.session_id)].name = data.to;
 			this.emit('nick-set', data.to);
 		});
 	}
 
 	get nick() {
-    return this._nick;
+		return this._nick;
 	}
 
 	get users() {
@@ -290,16 +298,16 @@ class Bot extends EventEmitter {
 	}
 
 	set room(room) {
-    const rec = this._reconnect;
-    this._reconnect = false;
-    this.connection.close();
+		const rec = this._reconnect;
+		this._reconnect = false;
+		this.connection.close();
 		this.connection = new Connection(room, this.human, this.host, this.connection_options);
 		this._room = room;
 		this.connection.once('open', () => {
-        //TODO save the listeners
-      this._reconnect = rec;
+			//TODO save the listeners
+			this._reconnect = rec;
 			this._room = room;
-      this.nick = this.nick;
+			this.nick = this.nick;
 			this.emit('reconnected');
 		});
 	}
