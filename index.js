@@ -211,7 +211,7 @@ class Bot extends EventEmitter {
 		// any functionality must come AFTER pushing to log, in case the log is needed
 
 		// replace the nick with its ID in the context of the commands.
-		const content = data.content.replace(`@${this._nick}`, this._id);
+		const content = data.content.replace(`@${this._reply_nick}`, this._id);
 		const reaction = this.commands[content];
 		if(reaction)
 			reaction(data.id);
@@ -281,9 +281,11 @@ class Bot extends EventEmitter {
 		}
 		this.connection.nick(nick);
 		this._nick = nick;
+		this._reply_nick = nick.split(' ').join('');
 		this.connection.once('nick-reply', json => {
 			const data = json.data;
 			this._nick = data.to;
+			this._reply_nick = data.to.split(' ').join('');
 			this._listing[this._listing.findIndex(item => item.session_id === data.session_id)].name = data.to;
 			this.emit('nick-set', data.to);
 		});
