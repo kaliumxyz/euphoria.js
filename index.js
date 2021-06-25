@@ -254,7 +254,6 @@ class Bot extends EventEmitter {
 		const data = json.data;
 		if (!this._settings.stateless) {
             const index = this._listing.findIndex(item => item.session_id === data.session_id)
-            console.log(this._listing)
             if (this._listing[index]) {
 				this._listing[index].name = data.nick;
             }
@@ -313,12 +312,10 @@ class Bot extends EventEmitter {
 		this.connection.once('nick-reply', json => {
 			const data = json.data;
 			if (!this._settings.stateless) {
-				console.log(data)
                 nick = data.to
 				this._nick = nick;
 				this._reply_nick = nick?nick.split(' ').join(''):nick;
 				const index = this._listing.findIndex(item => item.session_id === data.session_id)
-				console.log(this._listing)
 				if (this._listing[index]) {
 					this._listing[index].name = nick;
 				}
