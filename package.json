@@ -12,7 +12,7 @@
 	"author": "",
 	"license": "ISC",
 	"dependencies": {
-		"euphoria-connection": "^0.6.0",
+		"euphoria-connection": "^0.8.1",
 		"uuid": "^3.3.2"
 	},
 	"devDependencies": {
