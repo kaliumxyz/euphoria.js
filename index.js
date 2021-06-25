@@ -2,7 +2,7 @@
 'use strict';
 const Connection = require('euphoria-connection');
 const EventEmitter = require('events');
-const uuid = require('uuid/v4');
+const { v4: uuid } = require('uuid');
 
 // TODO: filters for commands.
 
