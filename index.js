@@ -14,7 +14,8 @@ class Bot extends EventEmitter {
 			commands: [], // extra default commands
 			disconnect_on_kill: false, // disconnect intead of stopping when killed
 			stateless: false, // if a bot is stateless it does not keep track of server side state, rather trusting the information it has, this also disables listing and logging
-			reconnect: true // reconnect on unexpected disconnect
+			reconnect: true, // reconnect on unexpected disconnect
+			ping_interval: 5000 // ping the server every ping_interval. Set to 0 to disable.
 		},
 		defaults = {
 			room: room,
@@ -28,11 +29,6 @@ class Bot extends EventEmitter {
 		this.connection = new Connection(defaults.room, defaults.human, defaults.host, defaults.options, json => this._handle_snapshot(json));
 		this.connection.setMaxListeners(100);
 
-		// TODO: move this to euphoria-connection
-		this.connection.once('upgrade', ws => {
-			// console.log("upgrade");
-		});
-
 		// properties
 		this._room = defaults.room;
 		this._human = defaults.human;
@@ -41,6 +37,7 @@ class Bot extends EventEmitter {
 		this._settings = settings;
 		this._nick = nick;
 		this._reconnect_delay = 5000;
+		this._ping_interval = settings.ping_interval || 5000
 		this._listing = [];
 		this._log = [];
 		this._config = {
@@ -67,6 +64,7 @@ class Bot extends EventEmitter {
 		this._add_listeners(this);
 		this.connection.once('open', () => {
 			this.nick = nick;
+            setInterval(_ => this._heartbeat(this.connection), this._ping_interval)
 			this.emit('open');
 		});
 
@@ -110,11 +108,14 @@ class Bot extends EventEmitter {
 			that._handle_part_event(json);
 		});
 
+		that.connection.on('ping-reply', json => {
+			that.emit('ping-reply', json);
+		});
 	}
 
 	/**
 	 *
-	 * TODO: add flags to disable disable nick substitution
+	 * sends public message with ${content} and optionally as a reply to ${parent}. But async
 	 * @param {*} content
 	 * @param {*} parent
 	 */
@@ -138,7 +139,7 @@ class Bot extends EventEmitter {
 
 	/**
 	 *
-	 * TODO: add flags to disable disable nick substitution
+	 * sends public message with ${content} and optionally as a reply to ${parent}
 	 * @param {*} content
 	 * @param {*} parent
 	 */
@@ -173,6 +174,7 @@ class Bot extends EventEmitter {
 	/**
 	 * add a comand, returns the index of the command
 	 * TODO: add real command object that is returned, which has features to allow for mutating the command.
+	 * TODO: add the ability to define commands using templates
 	 * @param {*} command
 	 * @param {*} reaction
 	 */
@@ -272,6 +274,22 @@ class Bot extends EventEmitter {
         }
 		this.emit('ready');
 	}
+
+    _heartbeat(connection) {
+        const timestamp = Date.now();
+        connection.ping(timestamp, data => {
+            const time = timestamp;
+            if (data && data.data && data.data.time && data.data.time === time) {
+                // server is still alive
+            } else {
+                // server died. We close the connection and start reconnecting or if
+                // reconnecting is disabled, we exit.
+                connection.reconnect();
+            }
+        });
+    }
+
+
 
 	reconnect() {
 		this.emit('reconnecting');
