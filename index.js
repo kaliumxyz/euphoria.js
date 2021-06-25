@@ -11,9 +11,10 @@ class Bot extends EventEmitter {
 		nick = '><>',
 		room = 'test',
 		settings = {
-			commands: [],
-			disconnect_on_kill: false,
-			reconnect: true
+			commands: [], // extra default commands
+			disconnect_on_kill: false, // disconnect intead of stopping when killed
+			stateless: false, // if a bot is stateless it does not keep track of server side state, rather trusting the information it has, this also disables listing and logging
+			reconnect: true // reconnect on unexpected disconnect
 		},
 		defaults = {
 			room: room,
@@ -30,10 +31,6 @@ class Bot extends EventEmitter {
 		// TODO: move this to euphoria-connection
 		this.connection.once('upgrade', ws => {
 			// console.log("upgrade");
-		});
-
-		this.connection.once('open', ws => {
-			// console.log(ws);
 		});
 
 		// properties
@@ -207,7 +204,8 @@ class Bot extends EventEmitter {
 		/* TODO: limit log max size to prevent process from running out of memory
 
 		 */
-		this._log.push(data);
+		if (!this._settings.stateless)
+			this._log.push(data);
 		// any functionality must come AFTER pushing to log, in case the log is needed
 
 		// replace the nick with its ID in the context of the commands.
@@ -231,25 +229,35 @@ class Bot extends EventEmitter {
 
 	_handle_hello_event(json) {
 		const data = json.data;
-		this._listing.push(data.session);
+		if (!this._settings.stateless)
+			this._listing.push(data.session);
 		this.emit('hello-event', json);
 	}
 
 	_handle_join_event(json) {
 		const data = json.data;
-		this._listing.push(data);
+		if (!this._settings.stateless)
+			this._listing.push(data);
 		this.emit('join-event', json);
 	}
 
 	_handle_part_event(json) {
 		const data = json.data;
-		this._listing.splice(this._listing.findIndex(item => item.id === data.id), 1);
+		if (!this._settings.stateless)
+			this._listing.splice(this._listing.findIndex(item => item.id === data.id), 1);
 		this.emit('part-event', json);
 	}
 
 	_handle_nick_event(json) {
 		const data = json.data;
-		this._listing[this._listing.findIndex(item => item.session_id === data.session_id)].name = data.to;
+		if (!this._settings.stateless) {
+            const index = this._listing.findIndex(item => item.session_id === data.session_id)
+            console.log(this._listing)
+            if (this._listing[index]) {
+				this._listing[index].name = data.nick;
+            }
+        }
+
 		this.emit('nick-event', json);
 	}
 
@@ -258,8 +266,10 @@ class Bot extends EventEmitter {
 		this._identity = data.identity;
 		this._session_id = data.session_id;
 		this._version = data.version;
-		this._listing = this._listing.concat(data.listing);
-		this._log = data.log;
+		if (!this._settings.stateless) {
+			this._listing = this._listing.concat(data.listing);
+			this._log = data.log;
+        }
 		this.emit('ready');
 	}
 
@@ -277,17 +287,25 @@ class Bot extends EventEmitter {
 
 	set nick(nick) {
 		if (!nick) {
-			nick = undefined
+            return
 		}
 		this.connection.nick(nick);
 		this._nick = nick;
-		this._reply_nick = nick.split(' ').join('');
+		this._reply_nick = nick?nick.split(' ').join(''):nick;
 		this.connection.once('nick-reply', json => {
 			const data = json.data;
-			this._nick = data.to;
-			this._reply_nick = data.to.split(' ').join('');
-			this._listing[this._listing.findIndex(item => item.session_id === data.session_id)].name = data.to;
-			this.emit('nick-set', data.to);
+			if (!this._settings.stateless) {
+				console.log(data)
+                nick = data.to
+				this._nick = nick;
+				this._reply_nick = nick?nick.split(' ').join(''):nick;
+				const index = this._listing.findIndex(item => item.session_id === data.session_id)
+				console.log(this._listing)
+				if (this._listing[index]) {
+					this._listing[index].name = nick;
+				}
+			}
+				this.emit('nick-set', data.to);
 		});
 	}
 
