@@ -161,7 +161,7 @@ class Bot extends EventEmitter {
 		return this;
 	}
 
-	/* reply to the last post
+	/* reply to the last post or post of id
 	 *
 	 */
 	reply(content){
@@ -214,7 +214,7 @@ class Bot extends EventEmitter {
 		// any functionality must come AFTER pushing to log, in case the log is needed
 
 		// replace the nick with its ID in the context of the commands.
-		const content = data.content.replace(`@${this._reply_nick}`, this._id);
+		const content = data.content.replace(`@${this._stripped_nick}`, this._id);
 		const reaction = this.commands[content];
 		if(reaction)
 			reaction(data.id);
@@ -311,13 +311,14 @@ class Bot extends EventEmitter {
 		}
 		this.connection.nick(nick);
 		this._nick = nick;
-		this._reply_nick = nick?nick.split(' ').join(''):nick;
+        // priate nick without spaces to be compatible with euphoria completion / calling
+		this._stripped_nick = nick?nick.split(' ').join(''):nick;
 		this.connection.once('nick-reply', json => {
 			const data = json.data;
 			if (!this._settings.stateless) {
                 nick = data.to
 				this._nick = nick;
-				this._reply_nick = nick?nick.split(' ').join(''):nick;
+				this._stripped_nick = nick?nick.split(' ').join(''):nick;
 				const index = this._listing.findIndex(item => item.session_id === data.session_id)
 				if (this._listing[index]) {
 					this._listing[index].name = nick;
