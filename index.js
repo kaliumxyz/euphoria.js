@@ -81,7 +81,10 @@ class Bot extends EventEmitter {
 		});
 
 		that.connection.on('error', err => {
-			process.exit(1);
+			if(that._reconnect)
+				this.connection.close();
+            else
+				process.exit(1);
 		});
 
 		that.connection.on('send-reply', json => {
