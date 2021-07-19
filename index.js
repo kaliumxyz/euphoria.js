@@ -15,7 +15,7 @@ class Bot extends EventEmitter {
 			disconnect_on_kill: false, // disconnect intead of stopping when killed
 			stateless: false, // if a bot is stateless it does not keep track of server side state, rather trusting the information it has, this also disables listing and logging
 			reconnect: true, // reconnect on unexpected disconnect
-			ping_interval: 5000 // ping the server every ping_interval. Set to 0 to disable.
+			ping_interval: 5000, // ping the server every ping_interval. Set to 0 to disable.
 			log_max: 0 // the maximum size of the log 0 means limitless
 		},
 		defaults = {
