@@ -212,6 +212,9 @@ class Bot extends EventEmitter {
               this._log.pop();
           }
 			    this._log.push(data);
+      } else { // just keep one item in log for reply to work
+          this._log.pop();
+			    this._log.push(data);
       }
 		// any functionality must come AFTER pushing to log, in case the log is needed
 
