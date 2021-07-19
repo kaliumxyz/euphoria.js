@@ -16,6 +16,7 @@ class Bot extends EventEmitter {
 			stateless: false, // if a bot is stateless it does not keep track of server side state, rather trusting the information it has, this also disables listing and logging
 			reconnect: true, // reconnect on unexpected disconnect
 			ping_interval: 5000 // ping the server every ping_interval. Set to 0 to disable.
+			log_max: 0 // the maximum size of the log 0 means limitless
 		},
 		defaults = {
 			room: room,
@@ -44,7 +45,7 @@ class Bot extends EventEmitter {
 			regex: false,
 			disconnect_on_kill: settings.disconnect_on_kill || false
 		};
-		this._reconnect = settings.reconnect || false;
+		this._reconnect = settings.reconnect || true;
 		// TODO: create an immutable way to refer to self and make this clear to any user
 		this._id = uuid();
 		this.self = this._id;
@@ -206,11 +207,12 @@ class Bot extends EventEmitter {
 	_handle_send_event(json) {
 		const data = json.data;
 
-		/* TODO: limit log max size to prevent process from running out of memory
-
-		 */
-		if (!this._settings.stateless)
-			this._log.push(data);
+		  if (!this._settings.stateless) {
+          if (this._settings.log_max && this._settings.log_max !== 0 && this._settings.log_max < this._log.length) {
+              this._log.pop();
+          }
+			    this._log.push(data);
+      }
 		// any functionality must come AFTER pushing to log, in case the log is needed
 
 		// replace the nick with its ID in the context of the commands.
