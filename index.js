@@ -63,9 +63,10 @@ class Bot extends EventEmitter {
 		};
 		this.commands[`!ping ${this._id}`] = this._make_reaction('pong!');
 		this._add_listeners(this);
+    this._heartbeat_interval;
 		this.connection.once('open', () => {
 			this.nick = nick;
-            setInterval(_ => this._heartbeat(this.connection), this._ping_interval)
+      this._heartbeat_interval = setInterval(_ => this._heartbeat(this.connection), this._ping_interval)
 			this.emit('open');
 		});
 
@@ -289,18 +290,28 @@ class Bot extends EventEmitter {
             } else {
                 // server died. We close the connection and start reconnecting or if
                 // reconnecting is disabled, we exit.
-                connection.reconnect();
+                this.reconnect();
             }
         });
     }
 
 
 
-	reconnect() {
+	reconnect(room) {
+    clearInterval(this._heartbeat_interval)
 		this.emit('reconnecting');
+		const rec = this._reconnect;
+		this._reconnect = false;
+		this.connection.close();
+    if (room)
+        this._room = room;
+    //TODO: figure out if the old connection gets GCd or not
 		this.connection = new Connection(this.room, this.human, this.host, this.connection_options);
 		this._add_listeners(this);
 		this.connection.once('open', () => {
+			//TODO save the listeners
+			this._reconnect = rec;
+      this._heartbeat_interval = setInterval(_ => this._heartbeat(this.connection), this._ping_interval)
 			this.nick = this.nick;
 			this.emit('reconnected');
 		});
@@ -309,7 +320,7 @@ class Bot extends EventEmitter {
 	}
 
 	set nick(nick) {
-		if (!nick) {
+		  if (!nick) { // how?
             return
 		}
 		this.connection.nick(nick);
@@ -340,18 +351,10 @@ class Bot extends EventEmitter {
 	}
 
 	set room(room) {
-		const rec = this._reconnect;
-		this._reconnect = false;
-		this.connection.close();
-		this.connection = new Connection(room, this.human, this.host, this.connection_options);
-		this._room = room;
-		this.connection.once('open', () => {
-			//TODO save the listeners
-			this._reconnect = rec;
-			this._room = room;
-			this.nick = this.nick;
-			this.emit('reconnected');
-		});
+     const that = this;
+     setTimeout(_=> {
+         that.reconnect(room)
+     },10)
 	}
 
 	get room() {
