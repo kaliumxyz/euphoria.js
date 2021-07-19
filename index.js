@@ -69,7 +69,7 @@ class Bot extends EventEmitter {
 			this.emit('open');
 		});
 
-		process.on('beforeExit', () => {
+		process.on('exit', () => {
 			this._reconnect = false;
 			this.connection.close();
 		});
