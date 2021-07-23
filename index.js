@@ -65,9 +65,15 @@ class Bot extends EventEmitter {
 				this._add_listeners(this);
 				this._heartbeat_interval;
 				this.connection.once('open', () => {
-						this.nick = nick;
 						this._heartbeat_interval = setInterval(_ => this._heartbeat(this.connection), this._ping_interval)
-						this.emit('open');
+						if (nick !== "") {
+								this.nick = nick;
+								this.connection.once('nick-reply', () => {
+										this.emit('open');
+								})
+						} else {
+								this.emit('open');
+						}
 				});
 
 				process.on('exit', () => {
@@ -89,6 +95,11 @@ class Bot extends EventEmitter {
 				});
 
 				that.connection.on('send-reply', json => {
+						if (!json.error) {
+								that._handle_send_event(json);
+						} else {
+								console.error(json.error)
+						}
 						that.emit('send-reply', json);
 				});
 

@@ -93,21 +93,24 @@ test('can reply to latest post', async t => {
 	t.pass();
 });
 
-test('can get latest posts', async t => {
+test.only('can get latest posts', async t => {
 	setTimeout(() => t.reject('timed out'), 10000);
 	const bot = new Bot(config.nick, config.room);
-	const log = await new Promise(res => {
-		bot.once('ready', () => {
+	const log = await new Promise((res, rej) => {
+		bot.once('open', () => {
 			bot
-				.on('posting', () => {
-					if (bot.log.pop() === 'post') {
-						res(bot.log);
+				.on('send-reply', () => {
+					const rep = bot.log.pop();
+					if (rep.content === 'post') {
+						res(rep.content);
+					} else {
+						rej(rep);
 					}
 				})
 				.post('post');
 		});
 	});
-	t.is(log.pop().content, 'post');
+	t.is(log, 'post');
 });
 
 test('can get listing', async t => {
