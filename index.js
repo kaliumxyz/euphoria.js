@@ -329,7 +329,6 @@ class Bot extends EventEmitter {
 				this._stripped_nick = nick?nick.split(' ').join(''):nick;
 				this.connection.once('nick-reply', json => {
 						const data = json.data;
-						console.log('nick reply',data)
 						if (data && data.to) {
 								if (!this._settings.stateless) {
 										nick = data.to
