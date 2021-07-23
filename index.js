@@ -26,9 +26,9 @@ class Bot extends EventEmitter {
 				}) {
 
 				super();
+				process.setMaxListeners(100);
 				this.setMaxListeners(100);
 				this.connection = new Connection(defaults.room, defaults.human, defaults.host, defaults.options, json => this._handle_snapshot(json));
-				this.connection.setMaxListeners(100);
 
 				// properties
 				this._room = defaults.room;
@@ -77,6 +77,7 @@ class Bot extends EventEmitter {
 		}
 
 		_add_listeners(that) {
+				that.connection.setMaxListeners(100);
 				that.connection.on('close', () => {
 						if(that._reconnect)
 								setTimeout(() => {that.reconnect()}, that._reconnect_delay)
