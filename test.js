@@ -78,13 +78,13 @@ test('can send', async t => {
 	t.pass();
 });
 
-test('can reply', async t => {
+test('can reply to latest post', async t => {
 	setTimeout(() => t.reject('timed out'), 10000);
 	const bot = new Bot(config.nick, config.room);
 	await new Promise(res => {
 		bot.once('open', () => {
 			bot.post('post');
-			bot.connection.once('send-event', () => {
+			bot.once('send-reply', () => {
 				bot.reply('reply');
 				res();
 			});
