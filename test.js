@@ -93,7 +93,7 @@ test('can reply to latest post', async t => {
 	t.pass();
 });
 
-test.only('can get latest posts', async t => {
+test('can get latest posts', async t => {
 	setTimeout(() => t.reject('timed out'), 10000);
 	const bot = new Bot(config.nick, config.room);
 	const log = await new Promise((res, rej) => {
@@ -150,7 +150,8 @@ test('can update listing', async t => {
 	t.true(bot.listing.find(x => x.id === target.identity) === void 0);
 });
 
-test('can update others nick in listing', async t => {
+// euphoria doesn't have a working listing anymore :c
+test.skip('can update others nick in listing', async t => {
 	setTimeout(() => t.fail('timed out'), 10000);
 	const name = '' + Date.now();
 	const bot = new Bot('can update listing others nick', config.room);
@@ -173,7 +174,8 @@ test('can update others nick in listing', async t => {
 	t.truthy(bot.listing.find(x => x.id === target.identity && x.name === name));
 });
 
-test('can update own nick in listing', async t => {
+// euphoria doesn't have a working listing anymore
+test.skip('can update own nick in listing', async t => {
 	setTimeout(() => t.fail('timed out'), 10000);
 	const name = '' + Date.now();
 	const bot = new Bot('can update listing own nick', config.room);
@@ -230,7 +232,7 @@ test('can be killed', async t => {
 			murderee.connection.once('close', () => {
 				res();
 			});
-			murderer.post('!kill @murderee');			
+			murderer.post('!kill @murderee');
 		});
 	});
 	t.pass();
