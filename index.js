@@ -152,7 +152,6 @@ class Bot extends EventEmitter {
 						this.once('send-reply', json => resolve(json.data));
 				});
 		}
-
 		/**
 		 *
 		 * sends public message with ${content} and optionally as a reply to ${parent}
@@ -170,6 +169,26 @@ class Bot extends EventEmitter {
 				} else {
 						this.emit('posting', {content: parsed, bot: {unparsed: content}, parent: parent});
 						this.connection.post(parsed, parent);
+				}
+
+				return this;
+		}
+
+		/**
+		 *
+		 * sends public message without replacing bot.self with ${content} and optionally as a reply to ${parent}
+		 * @param {*} content
+		 * @param {*} parent
+		 */
+		post_raw(content, parent) {
+				if (Array.isArray(parent)) {
+						parent.forEach(parent => {
+								this.emit('posting', {content: content, bot: {unparsed: content}, parent: parent});
+								this.connection.post(content, parent);
+						});
+				} else {
+						this.emit('posting', {content: content, bot: {unparsed: content}, parent: parent});
+						this.connection.post(content, parent);
 				}
 
 				return this;

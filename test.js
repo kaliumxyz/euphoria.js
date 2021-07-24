@@ -31,7 +31,7 @@ test.skip('can create over 11 connections without memory leak error', async t =>
 	const last = test.pop();
 	await new Promise(res => {
 		last.once('open', () => {
-			res(last)
+			res(last);
 			t.true(last instanceof Bot);
 		});
 	});
@@ -72,6 +72,18 @@ test('can send', async t => {
 	await new Promise(res => {
 		bot.once('open', () => {
 			bot.post('post');
+			bot.connection.once('send-reply', () => res());
+		});
+	});
+	t.pass();
+});
+
+test('can send raw', async t => {
+	setTimeout(() => t.reject('timed out'), 10000);
+	const bot = new Bot(config.nick, config.room);
+	await new Promise(res => {
+		bot.once('open', () => {
+			bot.post_raw('post');
 			bot.connection.once('send-reply', () => res());
 		});
 	});
