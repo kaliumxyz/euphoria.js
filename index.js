@@ -354,7 +354,7 @@ class Bot extends EventEmitter {
 		}
 
 		set nick(nick) {
-				if (!nick) { // how?
+				if (!nick || typeof(nick) !== 'string') {
 						return
 				}
 				this.connection.nick(nick);

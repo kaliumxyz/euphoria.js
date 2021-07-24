@@ -51,6 +51,22 @@ test('can change nick', async t => {
 	delete test.bot;
 });
 
+test('can chance nick only to strings', async t => {
+	setTimeout(() => t.reject('timed out'), 10000);
+	const test = {};
+	test.bot = new Bot(config.nick, config.room);
+	const nick = await new Promise(res => {
+		test.bot.once('open', () => {
+			test.bot.nick = 'nick';
+			test.bot.nick = 1;
+			res(test.bot.nick);
+		});
+	});
+	t.is(nick, 'nick');
+	delete test.bot;
+});
+
+
 test('can change room', async t => {
 	setTimeout(() => t.reject('timed out'), 10000);
 	const bot = new Bot(config.nick, config.room);
@@ -83,7 +99,7 @@ test('can send raw', async t => {
 	const bot = new Bot(config.nick, config.room);
 	await new Promise(res => {
 		bot.once('open', () => {
-			bot.post_raw('post');
+			bot.post_raw(bot.self);
 			bot.connection.once('send-reply', () => res());
 		});
 	});
