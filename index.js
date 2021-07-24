@@ -137,7 +137,7 @@ class Bot extends EventEmitter {
 		post_async(content, parent) {
 
 				return new Promise((resolve, reject) => {
-						const parsed = content.replace(this.self, `@${this._nick}`);
+						const parsed = content.replaceAll(this.self, `@${this._nick}`);
 						if (Array.isArray(parent)) {
 								parent.forEach(parent => {
 										this.emit('posting', {content: parsed,bot: {unparsed: content}, parent: parent});
@@ -159,7 +159,7 @@ class Bot extends EventEmitter {
 		 * @param {*} parent
 		 */
 		post(content, parent) {
-				const parsed = content.replace(this.self, `@${this._nick}`);
+				const parsed = content.replaceAll(this.self, `@${this._nick}`);
 				if (Array.isArray(parent)) {
 						parent.forEach(parent => {
 								this.emit('posting', {content: parsed, bot: {unparsed: content}, parent: parent});
@@ -230,7 +230,7 @@ class Bot extends EventEmitter {
 				// any functionality must come AFTER pushing to log, in case the log is needed
 
 				// replace the nick with its ID in the context of the commands.
-				const content = data.content.replace(`@${this._stripped_nick}`, this._id);
+				const content = data.content.replaceAll(`@${this._stripped_nick}`, this._id);
 				const reaction = this.commands[content];
 				if(reaction)
 						reaction(data.id);

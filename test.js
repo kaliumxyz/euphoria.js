@@ -212,7 +212,7 @@ test.skip('can print default help', async t => {
 			helper.connection.once('send-event', () => {
 				res();
 			});
-			help.post('!help');			
+			help.post('!help');
 		});
 	});
 	t.pass();
