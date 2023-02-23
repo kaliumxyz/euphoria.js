@@ -1,8 +1,8 @@
 #!/bin/env node
 'use strict';
-const Connection = require('euphoria-connection');
-const EventEmitter = require('events');
-const { v4: uuid } = require('uuid');
+import Connection from 'euphoria-connection';
+import EventEmitter from 'events';
+import { v4 as uuid } from 'uuid';
 
 // TODO: filters for commands.
 
@@ -450,4 +450,4 @@ class Bot extends EventEmitter {
  * remove the current outside of the Bot constructor to prevent it from getting too bloated.
  */
 
-module.exports = {Bot};
+export {Bot};

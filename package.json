@@ -8,21 +8,24 @@
 		"test-v": "ava --verbose",
 		"build": "babel src -d lib"
 	},
+	"type": "module",
 	"keywords": [],
 	"author": "",
 	"license": "ISC",
 	"dependencies": {
 		"euphoria-connection": "^0.8.1",
+		"node-fetch": "^3.3.0",
+		"sqlite3": "^5.1.4",
 		"uuid": "^8.3.2"
 	},
 	"devDependencies": {
-		"ava": "^2.3.0"
+		"ava": "^5.2.0"
 	},
 	"presets": [
 		"env",
 		{
 			"targets": {
-				"node": "v8.11.3"
+				"node": "v19.7.0"
 			}
 		}
 	]
